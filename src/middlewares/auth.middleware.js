@@ -5,7 +5,8 @@ import { User } from "../models/user.model.js";
 
 export const verifyJWT= asyncHandler(async(req,res,next)=>{
     try {
-        const token= req.cookies?.accessToken || req.header("Authorization")?.replace("bearer ","")
+        
+        const token= req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ","")
         if(!token){
             throw new ApiError(401, "Unauthorised Error")
         }
@@ -14,9 +15,10 @@ export const verifyJWT= asyncHandler(async(req,res,next)=>{
         const user= await User.findById(decodedToken?._id).select("-password -refreshToken");
         if(!user){
             throw new ApiError(401,"Invalid Access Token")
-    
+            
         }
-        req.user= user
+        req.user= user;
+
         next()
     } catch (error) {
         throw new ApiError(401, error?.message || "Invalid Access Token")
