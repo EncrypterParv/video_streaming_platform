@@ -399,4 +399,4 @@ export {registerUser,
         updateUserAvatar,
         updateCover, 
         getUserChannelProfile, 
-        getWatchHistory };
+        getWatchHistory }; 
