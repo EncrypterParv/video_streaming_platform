@@ -1,7 +1,7 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
-import { uploadFilePath  } from "../utils/cloudinary.js";
+import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt, { decode } from "jsonwebtoken"
 import mongoose from "mongoose";
@@ -53,8 +53,8 @@ const registerUser= asyncHandler(async function(req,res){
     if(!avatarLocalPath){
         throw new ApiError(400, "Avatar file path is pending")
     }
-    const avatar=await uploadFilePath(avatarLocalPath);
-    const coverImage= await uploadFilePath(coverImageLocalPath);
+    const avatar=await uploadOnCloudinary(avatarLocalPath);
+    const coverImage= await uploadOnCloudinary(coverImageLocalPath);
     if (!avatar){
         throw new ApiError(400, "Avatar file is required")
     }
@@ -68,7 +68,7 @@ const registerUser= asyncHandler(async function(req,res){
     })
 
     const createdUser= await User.findById(user._id).select(
-        "-password -refreshTokens"
+        "-password -refreshToken"
     )
     if(!createdUser){
         throw new ApiError(500, "Something went wrong while registering the user")
@@ -202,7 +202,7 @@ const changeCurrentPassword= asyncHandler(async(req,res)=>{
 const getCurrentUser= asyncHandler(async(req,res)=>{
   return res
   .status(200)
-  .json(new ApiResponse(200, {}, "Current User Fetched Successfully"))  
+  .json(new ApiResponse(200, req.user, "Current User Fetched Successfully"))  
 })
 
 const updateAccountDetails= asyncHandler(async(req, res)=>{
@@ -234,6 +234,7 @@ const updateUserAvatar= asyncHandler(async(req, res)=>{
   }
   const avatar= await uploadOnCloudinary(avatarLocalPath)
 
+
   if(!avatar.url){
     throw new ApiError(400, "Error while loading on avatar")
   }
@@ -247,6 +248,10 @@ const updateUserAvatar= asyncHandler(async(req, res)=>{
     {new: true}
   )
   .select("-password")
+
+  return res
+  .status(200)
+  .json(new ApiResponse(200, user, "Avatar updated successfully"))
 })
 
 const updateCover= asyncHandler(async(req,res)=>{
@@ -255,6 +260,7 @@ const updateCover= asyncHandler(async(req,res)=>{
         throw new ApiError(400, "Cover Photo path is required")
     }
     const cover= await uploadOnCloudinary(coverLocalPath)
+
 
     if(!cover.url){
         throw new ApiError(400, "Error occured while uploading Cover Photo")
@@ -363,7 +369,7 @@ const getWatchHistory= asyncHandler(async(req,res)=>{
                             as: "owner",
                             pipeline:[
                                 {
-                                    project:{
+                                    $project:{
                                         fullName: 1,
                                         username: 1,
                                         avatar: 1
@@ -374,7 +380,9 @@ const getWatchHistory= asyncHandler(async(req,res)=>{
                     },
                     {
                         $addFields:{
-                            $first: "$owner"
+                            owner: {
+                                $first: "$owner"
+                            }
                         }
                     }
                 ]

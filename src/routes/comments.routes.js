@@ -6,11 +6,11 @@ const router= Router();
 
 router.use(verifyJWT);
 
-router.route("./videoId")
+router.route("/:videoId")
     .get(getVideoComments)
     .post(addComment);
 
-router.route("./commentId")
+router.route("/:commentId")
     .patch(updateComment)
     .delete(deleteComment);
 

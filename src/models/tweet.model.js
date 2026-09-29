@@ -8,7 +8,7 @@ const tweetSchema= new Schema({
     },
     content:{
         type: String,
-        requried: true
+        required: true
     }
 },
     {
